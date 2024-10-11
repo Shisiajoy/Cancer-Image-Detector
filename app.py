@@ -17,18 +17,11 @@ st.sidebar.write("""This app demonstrates anomaly detection using an autoencoder
 Upload your dataset of mammogram images, and we'll train an autoencoder to reconstruct them.
 Based on the reconstruction loss, we'll flag any image with high loss as anomalous.""")
 
-# Sidebar contact
-st.sidebar.title("Contact")
-st.sidebar.info("Developed by [Shisia Joy](https://github.com/shisia), feel free to reach out for any inquiries!")
-
 # Function to load and preprocess images
-def preprocess_images(image_files, img_size=(64, 64)):
+def preprocess_images(image_files, img_size=(128, 128)):
     images = []
     for img_file in image_files:
-        img = Image.open(img_file)
-        if img.mode != 'L':
-            st.error(f"Error: {img_file.name} is not a grayscale image. Please upload mammogram images only.")
-            return None
+        img = Image.open(img_file).convert('L')  # Ensure image is in grayscale
         img = img.resize(img_size)
         img_array = np.array(img) / 255.0  # Normalize pixel values
         images.append(img_array)
@@ -63,11 +56,11 @@ if st.sidebar.button("Train Autoencoder") and uploaded_files:
     # Load and preprocess images
     train_images = preprocess_images(uploaded_files)
 
-    if train_images is None:
-        st.warning("Please upload valid mammogram images to proceed.")
+    if train_images.size == 0:
+        st.warning("No valid images uploaded. Please upload mammogram images.")
     else:
-        # Display the first image
-        st.image(train_images[0], caption="Sample Mammogram Image from Dataset", use_column_width=True)
+        # Display a sample image
+        st.image(train_images[0], caption="Sample Mammogram Image", use_column_width=True)
 
         # Check if the model exists
         if os.path.exists(model_save_path):
@@ -92,8 +85,6 @@ if st.sidebar.button("Train Autoencoder") and uploaded_files:
             autoencoder.fit(train_images, train_images, epochs=epochs, verbose=1)
 
             st.write("### Autoencoder Training Complete!")
-
-            # Save the trained model
             autoencoder.save(model_save_path)
             st.success(f"Model saved as {model_save_path}")
 
@@ -106,14 +97,14 @@ if st.sidebar.button("Train Autoencoder") and uploaded_files:
         mean_loss = np.mean(reconstruction_losses)
         std_loss = np.std(reconstruction_losses)
 
-        # Adjust threshold
-        threshold = mean_loss + 0.1 * std_loss
+        # Define a threshold for anomalies
+        threshold = mean_loss + 0.5 * std_loss
         st.write(f"Mean Loss: {mean_loss:.6f}, Standard Deviation: {std_loss:.6f}, Threshold: {threshold:.6f}")
 
         # Identify anomalous images
         st.write("### Anomalous Images Detection")
         anomalous_indices = np.where(reconstruction_losses > threshold)[0]
-        if len(anomalous_indices) > 0:
+        if anomalous_indices.size > 0:
             for idx in anomalous_indices:
                 st.write(f"Image {idx} is anomalous (Loss: {reconstruction_losses[idx]:.6f})")
                 display_images(train_images[idx], reconstructed_images[idx], title=f"Anomalous Image {idx}")
