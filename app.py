@@ -4,7 +4,7 @@ import json
 from keras.models import load_model
 
 # Load the autoencoder model
-model = load_model('autoencoder_model.h5')
+model = load_model('autoencoder_model.keras')
 
 # Load the threshold value
 with open('threshold.json', 'r') as json_file:
