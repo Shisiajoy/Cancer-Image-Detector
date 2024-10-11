@@ -4,3 +4,4 @@ keras
 pandas
 numpy
 scikit-learn
+opencv-python
