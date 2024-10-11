@@ -98,7 +98,7 @@ if st.sidebar.button("Train Autoencoder") and uploaded_files:
         std_loss = np.std(reconstruction_losses)
 
         # Define a threshold for anomalies
-        threshold = mean_loss + 0.5 * std_loss
+        threshold = mean_loss + 0.1 * std_loss
         st.write(f"Mean Loss: {mean_loss:.6f}, Standard Deviation: {std_loss:.6f}, Threshold: {threshold:.6f}")
 
         # Identify anomalous images
