@@ -7,7 +7,7 @@ from PIL import Image
 import cv2
 
 # Load the autoencoder model
-model = load_model('autoencoder_model.keras')
+model = load_model('FinalModel.keras')
 
 # Load the threshold value
 with open('threshold.json', 'r') as json_file:
