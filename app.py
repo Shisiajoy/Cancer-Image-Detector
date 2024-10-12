@@ -101,10 +101,10 @@ if st.sidebar.button("Train Autoencoder") and uploaded_files:
         # Identify anomalous images
         st.write("### Anomalous Images Detection")
         anomalous_indices = np.where(reconstruction_losses > threshold)[0]
-        
+
         if anomalous_indices.size > 0:
             for idx in anomalous_indices:
-                loss_value = reconstruction_losses[idx]  # Directly access the loss value
+                loss_value = float(reconstruction_losses[idx])  # Convert to a Python float
                 st.write(f"Image {idx} is anomalous (Loss: {loss_value:.6f})")
                 display_images(train_images[idx], reconstructed_images[idx], title=f"Anomalous Image {idx}")
         else:
