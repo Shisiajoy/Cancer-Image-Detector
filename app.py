@@ -27,7 +27,7 @@ def preprocess_images(image_files, img_size=(128, 128)):
         img = Image.open(img_file).convert('L')  # Convert to grayscale
         img = img.resize(img_size)
 
-        # Check if the image is valid and is in the expected size range
+        # Check if the image is not empty and is in expected size range
         img_array = np.array(img)
         if img_array.size > 0 and img_array.shape[0] > 0 and img_array.shape[1] > 0:
             img_array = img_array / 255.0  # Normalize pixel values
@@ -104,7 +104,7 @@ if st.sidebar.button("Train Autoencoder") and uploaded_files:
         
         if anomalous_indices.size > 0:
             for idx in anomalous_indices:
-                loss_value = reconstruction_losses[idx].item()  # Get a Python float
+                loss_value = reconstruction_losses[idx]  # Directly access the loss value
                 st.write(f"Image {idx} is anomalous (Loss: {loss_value:.6f})")
                 display_images(train_images[idx], reconstructed_images[idx], title=f"Anomalous Image {idx}")
         else:
