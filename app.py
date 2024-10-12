@@ -1,86 +1,94 @@
 import streamlit as st
 from PIL import Image
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 import os
 
-# Load the trained model (ensure you provide the path to your model)
+# Load the autoencoder model (ensure you provide the correct path)
 @st.cache(allow_output_mutation=True)
-def load_model():
-    model = tf.keras.models.load_model('FinalModel.keras')
-    return model
+def load_autoencoder():
+    autoencoder = tf.keras.models.load_model('FinalModel.keras')
+    return autoencoder
 
-# Preprocess image before feeding to the model
+# Preprocess image before feeding to the autoencoder
 def preprocess_image(image):
-    img = image.resize((224, 224))  # Assuming MobileNetV2 input size
+    img = image.resize((224, 224))  # Assuming Autoencoder input size
     img = np.array(img)
     img = img / 255.0  # Normalize
     img = np.expand_dims(img, axis=0)  # Add batch dimension
     return img
 
+# Check if the image is grayscale (common for mammogram images)
+def is_mammogram(image):
+    return len(np.array(image).shape) == 2 or np.array(image).shape[2] == 1  # Grayscale check
+
 # Cute page title and emoji
-st.title("🩺 Mammogram Cancer Detection 🩺")
-st.subheader("Your trusty AI companion for breast cancer screening!")
-st.write("Upload a mammogram image below to check for signs of cancer! 🎀")
+st.title("🩺 Mammogram Anomaly Detection 🩺")
+st.subheader("Your trusty AI companion for detecting anomalies in mammograms! 🎀")
 
-# Upload image section
-uploaded_file = st.file_uploader("Choose a mammogram image file", type=["jpg", "png", "jpeg"])
-
-# Drop-down for detailed descriptions
-description = st.selectbox(
-    "What would you like to know more about?",
-    ("Model Overview", "How the AI works", "About Mammogram Images", "Disclaimer")
-)
+# Sidebar for detailed descriptions
+with st.sidebar:
+    st.header("Learn More 📖")
+    description = st.selectbox(
+        "What would you like to know more about?",
+        ("Model Overview", "How the AI works", "About Mammogram Images", "Disclaimer")
+    )
 
 # Display selected description
 if description == "Model Overview":
-    st.write("""
-    **Model Overview:** This is a convolutional neural network (CNN) built using MobileNetV2 architecture, 
-    fine-tuned for mammogram image analysis to detect signs of breast cancer.
+    st.sidebar.write("""
+    **Model Overview:** This autoencoder model is designed to detect anomalies in mammogram images, 
+    such as identifying potential signs of breast cancer by comparing the image to healthy samples.
     """)
 elif description == "How the AI works":
-    st.write("""
-    **How the AI works:** The model processes the uploaded mammogram image, scales it down, and passes it 
-    through multiple layers of convolution and activation to identify patterns that may indicate cancer.
+    st.sidebar.write("""
+    **How the AI works:** The model processes the uploaded mammogram image, reconstructs it using the autoencoder,
+    and calculates the reconstruction error to determine if it's abnormal.
     """)
 elif description == "About Mammogram Images":
-    st.write("""
-    **About Mammogram Images:** Mammograms are X-ray images of the breast used for cancer screening. They help 
-    detect abnormalities, and our AI is trained to identify signs of malignancy.
+    st.sidebar.write("""
+    **About Mammogram Images:** Mammograms are X-ray images of the breast used for cancer screening. Our AI helps identify
+    any irregularities that might indicate an issue.
     """)
 elif description == "Disclaimer":
-    st.write("""
-    **Disclaimer:** This tool is intended for educational purposes and not for medical diagnosis. Always consult 
-    a healthcare professional for accurate diagnosis and treatment.
+    st.sidebar.write("""
+    **Disclaimer:** This tool is for educational purposes and not for medical diagnosis. Always consult a healthcare professional for accurate diagnosis and treatment.
     """)
 
 # Cute divider line
 st.markdown("---")
 
-# Load the model
-model = load_model()
+# Upload image section
+uploaded_file = st.file_uploader("Choose a mammogram image file", type=["jpg", "png", "jpeg"])
+
+# Load the autoencoder model
+autoencoder = load_autoencoder()
 
 if uploaded_file is not None:
     # Display uploaded image
     image = Image.open(uploaded_file)
     st.image(image, caption='Uploaded Image', use_column_width=True)
 
-    # Check if it's a mammogram
-    if "mammogram" in uploaded_file.name.lower():
+    # Check if it's a mammogram (grayscale or 1 channel)
+    if is_mammogram(image):
         st.write("Processing your mammogram image... ⏳")
         try:
             processed_img = preprocess_image(image)
-            prediction = model.predict(processed_img)
+            reconstruction = autoencoder.predict(processed_img)
             
-            # Example threshold for cancer detection
-            if prediction[0][0] > 0.5:
-                st.write("🎗️ **Prediction:** This mammogram **may indicate cancer**. Please consult a medical professional.")
+            # Calculate reconstruction error (example)
+            reconstruction_error = np.mean(np.abs(processed_img - reconstruction))
+
+            # Set a threshold for anomaly detection
+            threshold = 0.01  # This will need to be adjusted based on your model's training
+            if reconstruction_error > threshold:
+                st.write("🎗️ **Prediction:** This mammogram **may indicate an anomaly**. Please consult a medical professional.")
             else:
-                st.write("✅ **Prediction:** This mammogram does not indicate cancer. Regular screening is encouraged.")
+                st.write("✅ **Prediction:** This mammogram is likely healthy.")
         except Exception as e:
             st.write(f"⚠️ An error occurred while processing the image: {e}")
     else:
-        st.write("⚠️ The uploaded file is not a mammogram image. Please upload a valid mammogram image.")
+        st.write("⚠️ The uploaded image does not appear to be a valid mammogram (non-grayscale). Please upload a mammogram image.")
 
 # Cute footer
 st.markdown("""
