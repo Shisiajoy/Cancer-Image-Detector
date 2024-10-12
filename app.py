@@ -104,9 +104,16 @@ if st.sidebar.button("Train Autoencoder") and uploaded_files:
 
         if anomalous_indices.size > 0:
             for idx in anomalous_indices:
-                loss_value = float(reconstruction_losses[idx])  # Convert to a Python float (Ensure it's a scalar)
-                st.write(f"Image {idx} is anomalous (Loss: {loss_value:.6f})")
-                display_images(train_images[idx], reconstructed_images[idx], title=f"Anomalous Image {idx}")
+                # Validate that idx is within bounds of reconstruction_losses
+                if idx < len(reconstruction_losses):
+                    loss_value = reconstruction_losses[idx]  # Ensure it is a scalar value
+                    if np.isscalar(loss_value):
+                        st.write(f"Image {idx} is anomalous (Loss: {loss_value:.6f})")
+                        display_images(train_images[idx], reconstructed_images[idx], title=f"Anomalous Image {idx}")
+                    else:
+                        st.error(f"Unexpected loss value format for index {idx}: {loss_value}")
+                else:
+                    st.error(f"Index {idx} is out of bounds for reconstruction losses.")
         else:
             st.success("No anomalies detected in the dataset.")
 
