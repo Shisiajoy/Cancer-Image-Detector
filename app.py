@@ -103,7 +103,7 @@ if uploaded_file is not None:
 
             # Use the loaded threshold for anomaly detection
             if reconstruction_error > threshold:
-                st.write(f"🎗️ **Prediction:** This mammogram **may indicate an anomaly**. Please consult a medical professional.")
+                st.write(f"🎗️ **Prediction:** This mammogram **may indicate an anomaly**.")
             else:
                 st.write(f"✅ **Prediction:** This mammogram is likely healthy.")
 
