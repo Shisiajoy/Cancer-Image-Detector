@@ -26,8 +26,14 @@ def preprocess_images(image_files, img_size=(128, 128)):
     for img_file in image_files:
         img = Image.open(img_file).convert('L')  # Convert to grayscale
         img = img.resize(img_size)
-        img_array = np.array(img) / 255.0  # Normalize pixel values
-        images.append(img_array)
+
+        # Check if the image is not empty and is in expected size range
+        img_array = np.array(img)
+        if img_array.size > 0 and img_array.shape[0] > 0 and img_array.shape[1] > 0:
+            img_array = img_array / 255.0  # Normalize pixel values
+            images.append(img_array)
+        else:
+            st.warning(f"Image {img_file.name} is not valid. Please upload a valid mammogram image.")
     return np.array(images)
 
 # Function to display images
