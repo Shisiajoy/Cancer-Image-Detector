@@ -104,7 +104,7 @@ if st.sidebar.button("Train Autoencoder") and uploaded_files:
 
         if anomalous_indices.size > 0:
             for idx in anomalous_indices:
-                loss_value = float(reconstruction_losses[idx])  # Convert to a Python float
+                loss_value = float(reconstruction_losses[idx])  # Convert to a Python float (Ensure it's a scalar)
                 st.write(f"Image {idx} is anomalous (Loss: {loss_value:.6f})")
                 display_images(train_images[idx], reconstructed_images[idx], title=f"Anomalous Image {idx}")
         else:
