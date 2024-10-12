@@ -89,9 +89,13 @@ if uploaded_file is not None:
         try:
             processed_img = preprocess_image(image)
             reconstruction = autoencoder.predict(processed_img)
-            
+
             # Calculate reconstruction error
             reconstruction_error = np.mean(np.abs(processed_img - reconstruction))
+
+            # Display reconstructed image
+            reconstructed_image = reconstruction[0, :, :, 0]  # Take the first (and only) batch and first channel
+            st.image(reconstructed_image, caption='Reconstructed Image', use_column_width=True)
 
             # Use the loaded threshold for anomaly detection
             if reconstruction_error > threshold:
