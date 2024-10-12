@@ -8,7 +8,7 @@ import json
 # Load the autoencoder model (ensure you provide the correct path)
 @st.cache(allow_output_mutation=True)
 def load_autoencoder():
-    autoencoder = tf.keras.models.load_model('FinalModel.keras')
+    autoencoder = tf.keras.models.load_model('your_autoencoder_model_path.h5')
     return autoencoder
 
 # Load threshold from a JSON file (Assuming it was saved during training)
@@ -16,15 +16,16 @@ def load_threshold(json_path='threshold.json'):
     if os.path.exists(json_path):
         with open(json_path, 'r') as f:
             data = json.load(f)
-        return data.get("threshold", 0.0075)  # Default threshold if not found
+        return data.get("threshold", 0.05)  # Default threshold if not found
     else:
         return 0.05  # Return a default value if the file is not found
 
 # Preprocess image before feeding to the autoencoder
 def preprocess_image(image):
-    img = image.resize((224, 224))  # Assuming Autoencoder input size
+    img = image.resize((128, 128))  # Resize to 128x128 to match the model's expected input size
     img = np.array(img)
     img = img / 255.0  # Normalize
+    img = np.expand_dims(img, axis=-1)  # Add channel dimension for grayscale
     img = np.expand_dims(img, axis=0)  # Add batch dimension
     return img
 
@@ -34,7 +35,7 @@ def is_mammogram(image):
 
 # Page title and emoji
 st.title("🩺 Mammogram Anomaly Detection 🩺")
-st.subheader("detecting anomalies in mammograms! 🎀")
+st.subheader("Your trusty AI companion for detecting anomalies in mammograms! 🎀")
 
 # Sidebar for detailed descriptions
 with st.sidebar:
