@@ -8,7 +8,7 @@ import json
 # Load the autoencoder model (ensure you provide the correct path)
 @st.cache(allow_output_mutation=True)
 def load_autoencoder():
-    autoencoder = tf.keras.models.load_model('your_autoencoder_model_path.h5')
+    autoencoder = tf.keras.models.load_model('FinalModel.keras')
     return autoencoder
 
 # Load threshold from a JSON file (Assuming it was saved during training)
