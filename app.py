@@ -35,7 +35,7 @@ def is_mammogram(image):
 
 # Page title and emoji
 st.title("🩺 Mammogram Anomaly Detection 🩺")
-st.subheader("Your trusty AI companion for detecting anomalies in mammograms! 🎀")
+st.subheader("detecting anomalies in mammograms! 🎀")
 
 # Sidebar for detailed descriptions
 with st.sidebar:
@@ -47,7 +47,7 @@ with st.sidebar:
 
 # Display selected description
 if description == "Model Overview":
-    st.sidebar.write("""
+    st.sidebar.write(""" 
     **Model Overview:** This autoencoder model is designed to detect anomalies in mammogram images, 
     such as identifying potential signs of breast cancer by comparing the image to healthy samples.
     """)
@@ -93,15 +93,24 @@ if uploaded_file is not None:
             # Calculate reconstruction error
             reconstruction_error = np.mean(np.abs(processed_img - reconstruction))
 
-            # Display reconstructed image
-            reconstructed_image = reconstruction[0, :, :, 0]  # Take the first (and only) batch and first channel
-            st.image(reconstructed_image, caption='Reconstructed Image', use_column_width=True)
+            # Display the original and reconstructed images side by side
+            col1, col2 = st.columns(2)
+            with col1:
+                st.image(image, caption='Uploaded Image', use_column_width=True)
+            with col2:
+                reconstructed_image = reconstruction[0, :, :, 0]  # Take the first (and only) batch and first channel
+                st.image(reconstructed_image, caption='Reconstructed Image', use_column_width=True)
 
             # Use the loaded threshold for anomaly detection
             if reconstruction_error > threshold:
-                st.write("🎗️ **Prediction:** This mammogram **may indicate an anomaly**. Please consult a medical professional.")
+                st.write(f"🎗️ **Prediction:** This mammogram **may indicate an anomaly**. Please consult a medical professional.")
             else:
-                st.write("✅ **Prediction:** This mammogram is likely healthy.")
+                st.write(f"✅ **Prediction:** This mammogram is likely healthy.")
+
+            # Display reconstruction error and threshold
+            st.write(f"🔍 **Reconstruction Error:** {reconstruction_error:.4f}")
+            st.write(f"⚖️ **Threshold for Anomaly Detection:** {threshold:.4f}")
+
         except Exception as e:
             st.write(f"⚠️ An error occurred while processing the image: {e}")
     else:
