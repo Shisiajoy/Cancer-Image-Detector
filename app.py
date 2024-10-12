@@ -1,114 +1,98 @@
 import streamlit as st
-import numpy as np
-from tensorflow.keras.models import load_model
-from tensorflow.keras import layers, models
-import matplotlib.pyplot as plt
 from PIL import Image
+import tensorflow as tf
+import numpy as np
 import os
 
-# Page title and layout
-st.set_page_config(page_title="Anomaly Detection for Mammograms", layout="centered")
-st.title("🔍 Anomaly Detection using Autoencoders for Mammograms")
-st.markdown("### Detect anomalies in mammogram images using an autoencoder model trained for reconstruction.")
+# Load the trained model (ensure you provide the path to your model)
+@st.cache(allow_output_mutation=True)
+def load_model():
+    model = tf.keras.models.load_model('FinalModel.keras')
+    return model
 
-# Sidebar information and file uploader
-st.sidebar.title("Upload Dataset & Configure Model")
-st.sidebar.write("Upload your mammogram dataset and set autoencoder parameters to start anomaly detection.")
-uploaded_files = st.sidebar.file_uploader("Upload your mammogram images (JPG/PNG)", accept_multiple_files=True, type=["jpg", "png"])
+# Preprocess image before feeding to the model
+def preprocess_image(image):
+    img = image.resize((224, 224))  # Assuming MobileNetV2 input size
+    img = np.array(img)
+    img = img / 255.0  # Normalize
+    img = np.expand_dims(img, axis=0)  # Add batch dimension
+    return img
 
-# Sidebar settings
-latent_dim = st.sidebar.slider("Latent Space Dimension", min_value=16, max_value=256, step=16, value=64)
-epochs = st.sidebar.slider("Epochs", min_value=5, max_value=100, step=5, value=20)
+# Cute page title and emoji
+st.title("🩺 Mammogram Cancer Detection 🩺")
+st.subheader("Your trusty AI companion for breast cancer screening!")
+st.write("Upload a mammogram image below to check for signs of cancer! 🎀")
 
-# Function to load and preprocess images
-def preprocess_images(image_files, img_size=(128, 128)):
-    images = []
-    for img_file in image_files:
-        img = Image.open(img_file).convert('L')  # Convert to grayscale
-        img = img.resize(img_size)
+# Upload image section
+uploaded_file = st.file_uploader("Choose a mammogram image file", type=["jpg", "png", "jpeg"])
 
-        # Check if the image is not empty and is in expected size range
-        img_array = np.array(img)
-        if img_array.size > 0 and img_array.shape[0] > 0 and img_array.shape[1] > 0:
-            img_array = img_array / 255.0  # Normalize pixel values
-            images.append(img_array)
-        else:
-            st.warning(f"Image {img_file.name} is not valid. Please upload a valid mammogram image.")
-    return np.array(images)
+# Drop-down for detailed descriptions
+description = st.selectbox(
+    "What would you like to know more about?",
+    ("Model Overview", "How the AI works", "About Mammogram Images", "Disclaimer")
+)
 
-# Function to display images
-def display_images(original, reconstructed, title="Reconstruction"):
-    fig, axes = plt.subplots(1, 2, figsize=(6, 3))
-    axes[0].imshow(original, cmap='gray')
-    axes[0].set_title("Original")
-    axes[0].axis('off')
-    axes[1].imshow(reconstructed, cmap='gray')
-    axes[1].set_title("Reconstructed")
-    axes[1].axis('off')
-    st.write(f"### {title}")
-    st.pyplot(fig)
+# Display selected description
+if description == "Model Overview":
+    st.write("""
+    **Model Overview:** This is a convolutional neural network (CNN) built using MobileNetV2 architecture, 
+    fine-tuned for mammogram image analysis to detect signs of breast cancer.
+    """)
+elif description == "How the AI works":
+    st.write("""
+    **How the AI works:** The model processes the uploaded mammogram image, scales it down, and passes it 
+    through multiple layers of convolution and activation to identify patterns that may indicate cancer.
+    """)
+elif description == "About Mammogram Images":
+    st.write("""
+    **About Mammogram Images:** Mammograms are X-ray images of the breast used for cancer screening. They help 
+    detect abnormalities, and our AI is trained to identify signs of malignancy.
+    """)
+elif description == "Disclaimer":
+    st.write("""
+    **Disclaimer:** This tool is intended for educational purposes and not for medical diagnosis. Always consult 
+    a healthcare professional for accurate diagnosis and treatment.
+    """)
 
-# Main section for training the autoencoder
-model_save_path = "FinalModel.keras"
-if st.sidebar.button("Train Autoencoder") and uploaded_files:
-    st.write("### Training Autoencoder...")
+# Cute divider line
+st.markdown("---")
 
-    # Load and preprocess images
-    train_images = preprocess_images(uploaded_files)
+# Load the model
+model = load_model()
 
-    if train_images.size == 0:
-        st.warning("No valid images uploaded. Please upload mammogram images.")
+if uploaded_file is not None:
+    # Display uploaded image
+    image = Image.open(uploaded_file)
+    st.image(image, caption='Uploaded Image', use_column_width=True)
+
+    # Check if it's a mammogram
+    if "mammogram" in uploaded_file.name.lower():
+        st.write("Processing your mammogram image... ⏳")
+        try:
+            processed_img = preprocess_image(image)
+            prediction = model.predict(processed_img)
+            
+            # Example threshold for cancer detection
+            if prediction[0][0] > 0.5:
+                st.write("🎗️ **Prediction:** This mammogram **may indicate cancer**. Please consult a medical professional.")
+            else:
+                st.write("✅ **Prediction:** This mammogram does not indicate cancer. Regular screening is encouraged.")
+        except Exception as e:
+            st.write(f"⚠️ An error occurred while processing the image: {e}")
     else:
-        st.image(train_images[0], caption="Sample Mammogram Image", use_column_width=True)
+        st.write("⚠️ The uploaded file is not a mammogram image. Please upload a valid mammogram image.")
 
-        # Check if the model exists
-        if os.path.exists(model_save_path):
-            autoencoder = load_model(model_save_path)
-            st.write("Loaded existing autoencoder model.")
-        else:
-            # Create an autoencoder model
-            input_img = layers.Input(shape=train_images.shape[1:])
-            x = layers.Flatten()(input_img)
-            x = layers.Dense(latent_dim, activation='relu')(x)
-            encoded = layers.Dense(latent_dim, activation='relu')(x)
-
-            # Decoder
-            x = layers.Dense(np.prod(train_images.shape[1:]), activation='sigmoid')(encoded)
-            decoded = layers.Reshape(train_images.shape[1:])(x)
-
-            # Define and compile the autoencoder
-            autoencoder = models.Model(input_img, decoded)
-            autoencoder.compile(optimizer='adam', loss='mean_squared_error')
-
-            # Train the autoencoder
-            autoencoder.fit(train_images, train_images, epochs=epochs, verbose=1)
-            st.success("Autoencoder Training Complete!")
-            autoencoder.save(model_save_path)
-
-        # Generate reconstructed images and display them
-        reconstructed_images = autoencoder.predict(train_images)
-        display_images(train_images[0], reconstructed_images[0])
-
-        # Calculate reconstruction losses
-        reconstruction_losses = np.mean(np.square(train_images - reconstructed_images), axis=(1, 2))
-        mean_loss = np.mean(reconstruction_losses)
-        std_loss = np.std(reconstruction_losses)
-
-        # Define a threshold for anomalies
-        threshold = mean_loss + 0.1 * std_loss
-        st.write(f"**Mean Loss**: {mean_loss:.6f}, **Standard Deviation**: {std_loss:.6f}, **Threshold**: {threshold:.6f}")
-
-        # Identify anomalous images
-        st.write("### Anomalous Images Detection")
-        anomalous_indices = np.where(reconstruction_losses > threshold)[0]
-        
-        if anomalous_indices.size > 0:
-            for idx in anomalous_indices:
-                loss_value = reconstruction_losses[idx].item()  # Get a Python float
-                st.write(f"Image {idx} is anomalous (Loss: {loss_value:.6f})")
-                display_images(train_images[idx], reconstructed_images[idx], title=f"Anomalous Image {idx}")
-        else:
-            st.success("No anomalies detected in the dataset.")
-
-else:
-    st.write("Upload images and configure the autoencoder to get started.")
+# Cute footer
+st.markdown("""
+<style>
+footer {visibility: hidden;}
+footer:after {
+    content: 'Made with 💖 by Shisia | Always consult a doctor for medical concerns.';
+    visibility: visible;
+    display: block;
+    text-align: center;
+    padding: 10px;
+    font-size: 14px;
+}
+</style>
+""", unsafe_allow_html=True)
