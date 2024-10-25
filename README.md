@@ -8,7 +8,7 @@ This project aims to develop an anomaly detection system for mammogram images, w
 
 Early detection of breast cancer significantly increases the chances of successful treatment. However, traditional image classification approaches may not always effective. This project focuses on employing autoencoders to detect anomalies, where cancerous images are classified as anomalies. The goal is to build a model that can reconstruct normal images while highlighting those that deviate significantly from the norm.
 
-Typically, a radiologist might have to manually review thousands of mammogram images. However, with our autoencoder, the model analyzes every image first and flags only those that deviate from the normal pattern. This means, say in a batch of 100 mammograms, if 95 are healthy, the radiologist can confidently skip those, and focus only on the 5 that need a closer look.
+Typically, a radiologist might have to manually review thousands of mammogram images. However, with our autoencoder, the model analyzes every image first and flags only those that deviate from the normal pattern.
 
 ### Methodology
 
