@@ -60,7 +60,11 @@ Choosing autoencoders over traditional classification methods was driven by thei
 The trained model was evaluated on a set of mammogram images, with a clear distinction between normal and cancerous images based on reconstruction loss. Results showed that images with high reconstruction errors were often those that depicted anomalies. This demonstrates the potential of autoencoders in aiding early cancer detection.
 
 ### Deployment
+
 The application is deployed using Streamlit, allowing users to upload mammogram images and receive feedback on potential anomalies.
+
+[STREAMLIT APP](https://cancer-image-detector-gv7s3hg84s3a6nuk7jsgkn.streamlit.app/)
+
 
 ### Conclusion
 
